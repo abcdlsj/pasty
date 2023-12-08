@@ -26,6 +26,9 @@ var (
 	//go:embed tmpl/*.html
 	tmplFS embed.FS
 
+	//go:embed assets/*
+	assetFs embed.FS
+
 	dbFile = "pastes.db"
 
 	tmplFuncs = template.FuncMap{
@@ -68,9 +71,10 @@ func getPasteWithID(db *gorm.DB, uid string) Paste {
 	return paste
 }
 
-func insertPaste(db *gorm.DB, content string) {
+func insertPaste(db *gorm.DB, content string) string {
 	paste := Paste{UID: uuid.New().String(), Content: content, CreatedAt: time.Now()}
 	db.Create(&paste)
+	return paste.UID
 }
 
 func deletePaste(db *gorm.DB, uid string) {
@@ -97,8 +101,8 @@ func main() {
 		} else {
 			r.ParseForm()
 			content := r.Form.Get("content")
-			insertPaste(db, escapeContent(content))
-			http.Redirect(w, r, "/", http.StatusSeeOther)
+			uid := insertPaste(db, escapeContent(content))
+			http.Redirect(w, r, "/paste/"+uid, http.StatusSeeOther)
 		}
 	})
 
@@ -116,6 +120,11 @@ func main() {
 			deletePaste(db, uid)
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		}
+	})
+
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		favicon, _ := assetFs.ReadFile("assets/favicon.ico")
+		w.Write(favicon)
 	})
 
 	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
