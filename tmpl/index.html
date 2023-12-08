@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pasty</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <style>
+        body {
+            font-family: "gg sans Normal", ui-sans-serif, system-ui, -apple-system;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pasty</h1>
+    <p>Input your paste</p>
+    <form method="POST">
+        <textarea name="content" required rows="30"></textarea>
+        <br/>
+        <input type="submit" value="Submit">
+    </form>
+    <hr/>
+    <h2>Pasted</h2>
+    {{range .}}
+        <div>
+            <a href="/paste/{{.UID}}">{{.UID}}</a>
+            <p><pre><code>{{truncate .Content 200}}</code></pre></p>
+        </div>
+    {{end}}
+</body>
+</html>
