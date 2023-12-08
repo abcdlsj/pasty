@@ -8,6 +8,7 @@
             font-family: "gg sans Normal", ui-sans-serif, system-ui, -apple-system;
         }
     </style>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
     <h1>Pasty</h1>
@@ -16,13 +17,14 @@
         <textarea name="content" required rows="30"></textarea>
         <br/>
         <input type="submit" value="Submit">
+        <div class="cf-turnstile" data-sitekey="{{.CFTurnstileSiteKey}}" data-callback="turnstileCompleted"></div>
     </form>
     <hr/>
     <h2>Pasted</h2>
-    {{range .}}
+    {{range .Pastes}}
         <div>
             <a href="/paste/{{.UID}}">{{.UID}}</a>
-            <p><pre><code>{{truncate .Content 200}}</code></pre></p>
+            <pre><code>{{truncate .Content 200}}</code></pre>
         </div>
     {{end}}
 </body>

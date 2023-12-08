@@ -2,9 +2,11 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"text/template"
 	"time"
@@ -41,6 +43,12 @@ var (
 	}
 
 	tmpl = template.Must(template.New("").Funcs(tmplFuncs).ParseFS(tmplFS, "tmpl/*.html"))
+
+	port = os.Getenv("PORT")
+
+	CFTurnstileSecret  = os.Getenv("CF_SECRET")
+	CFTurnstileURL     = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+	CFTurnstileSiteKey = os.Getenv("CF_SITEKEY")
 )
 
 func initDB(filepath string) *gorm.DB {
@@ -89,6 +97,37 @@ func escapeContent(content string) string {
 	return template.HTMLEscapeString(content)
 }
 
+func cfValidate(r *http.Request) bool {
+	token := r.Form.Get("cf-turnstile-response")
+	ip := r.Header.Get("CF-Connecting-IP")
+
+	if token == "" || ip == "" {
+		return false
+	}
+
+	form := url.Values{}
+	form.Set("secret", CFTurnstileSecret)
+	form.Set("response", token)
+	form.Set("remoteip", ip)
+	idempotencyKey := uuid.New().String()
+	form.Set("idempotency_key", idempotencyKey)
+
+	resp, err := http.PostForm(CFTurnstileURL, form)
+	if err != nil {
+		return false
+	}
+
+	type CFTurnstileResponse struct {
+		Success bool `json:"success"`
+	}
+
+	cfresp := CFTurnstileResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(&cfresp)
+
+	return err != nil || cfresp.Success
+}
+
 func main() {
 	flag.StringVar(&dbFile, "db", dbFile, "database file")
 
@@ -97,10 +136,19 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			pastes := getAllPastes(db)
-			tmpl.ExecuteTemplate(w, "index.html", pastes)
+			tmpl.ExecuteTemplate(w, "index.html", map[string]interface{}{
+				"Pastes":             pastes,
+				"CFTurnstileSiteKey": CFTurnstileSiteKey,
+			})
 		} else {
 			r.ParseForm()
+			if !cfValidate(r) {
+				http.Error(w, "invalid captcha", http.StatusBadRequest)
+				return
+			}
+
 			content := r.Form.Get("content")
+
 			uid := insertPaste(db, escapeContent(content))
 			http.Redirect(w, r, "/paste/"+uid, http.StatusSeeOther)
 		}
@@ -127,5 +175,6 @@ func main() {
 		w.Write(favicon)
 	})
 
-	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	log.Printf("starting at http://127.0.0.1:%s", port)
+	http.ListenAndServe(":"+port, nil)
 }
