@@ -1,57 +1,59 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-    <title>Paste</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
+  <head>
+    <title>Pasty</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css"
+    />
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
     <style>
-        body {
-            font-family: "gg sans Normal", ui-sans-serif, system-ui, -apple-system;
-        }
+      body {
+        font-family: "gg sans Normal", ui-sans-serif, system-ui, -apple-system;
+      }
 
-        .code-container {
-            position: relative;
-        }
+      .code-container {
+        position: relative;
+      }
 
-        .code-container .copy-button {
-            position: absolute;
-            top: 0;
-            right: 0;
-            padding: 5px;
-            border: none;
-            cursor: pointer;
-        }
+      .code-container .copy-button {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 5px;
+        border: none;
+        cursor: pointer;
+      }
     </style>
     <script>
-        async function copyCode(block, button) {
-            let code = block.querySelector("code");
-            let text = code.innerText;
+      async function copyCode(block, button) {
+        let code = block.querySelector("code");
+        let text = code.innerText;
 
-            await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(text);
 
-            // visual feedback that task is completed
-            button.innerText = "Code Copied";
+        // visual feedback that task is completed
+        button.innerText = "Code Copied";
 
-            setTimeout(() => {
-                button.innerText = copyButtonLabel;
-            }, 700);
-        }
+        setTimeout(() => {
+          button.innerText = copyButtonLabel;
+        }, 700);
+      }
     </script>
-</head>
+  </head>
 
-<body>
-    <h1>Paste</h1>
+  <body>
     <a href="/">Home</a>
     <div class="code-container">
-        <h2>{{.UID}}</h2>
-        <button class="copy-button" onclick="copyCode(this.parentElement, this)">Copy</button>
-        <pre><code>{{.Content}}</code></pre>
-        <p>{{.CreatedAt}}</p>
-        <form method="POST">
-            <input type="submit" value="Delete">
-        </form>
+      <h2>{{.UID}}</h2>
+      <button class="copy-button" onclick="copyCode(this.parentElement, this)">
+        Copy
+      </button>
+      <pre><code>{{.Content}}</code></pre>
+      <p>{{.CreatedAt}}</p>
+      <form method="POST">
+        <input type="submit" value="Delete" />
+      </form>
     </div>
-</body>
-
+  </body>
 </html>

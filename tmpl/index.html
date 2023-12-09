@@ -1,32 +1,43 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Pasty</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css"
+    />
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
     <style>
-        body {
-            font-family: "gg sans Normal", ui-sans-serif, system-ui, -apple-system;
-        }
+      body {
+        font-family: "gg sans Normal", ui-sans-serif, system-ui, -apple-system;
+      }
     </style>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-</head>
-<body>
+    <script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      async
+      defer
+    ></script>
+  </head>
+  <body>
     <h1>Pasty</h1>
     <p>Input your paste</p>
     <form method="POST">
-        <textarea name="content" required rows="30"></textarea>
-        <br/>
-        <input type="submit" value="Submit">
-        <div class="cf-turnstile" data-sitekey="{{.CFTurnstileSiteKey}}" data-callback="turnstileCompleted"></div>
+      <textarea name="content" required rows="30"></textarea>
+      <br />
+      <input type="submit" value="Submit" />
+      <div
+        class="cf-turnstile"
+        data-sitekey="{{.CFTurnstileSiteKey}}"
+        data-callback="turnstileCompleted"
+      ></div>
     </form>
-    <hr/>
+    <hr />
     <h2>Pasted</h2>
     {{range .Pastes}}
-        <div>
-            <a href="/paste/{{.UID}}">{{.UID}}</a>
-            <pre><code>{{truncate .Content 200}}</code></pre>
-        </div>
+    <div>
+      <a href="/paste/{{.UID}}">{{.UID}}</a>
+      <pre><code>{{truncate .Content 200}}</code></pre>
+    </div>
     {{end}}
-</body>
+  </body>
 </html>
