@@ -91,7 +91,7 @@ func randCipherKey() {
 
 func getAllPastes(db *gorm.DB) []Paste {
 	pastes := []Paste{}
-	db.Find(&pastes)
+	db.Order("created_at desc").Find(&pastes)
 	return pastes
 }
 
