@@ -1,73 +1,724 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Pasty</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css"
-    />
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{.Title}} - Pasty</title>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-      body {
-        font-family: "gg sans Normal", ui-sans-serif, system-ui, -apple-system;
-      }
+        /* ========== CSS Variables - Light/Dark Theme ========== */
+        :root {
+            --background: #fafafa;
+            --foreground: #18181b;
+            --card: #ffffff;
+            --card-foreground: #18181b;
+            --muted: #f4f4f5;
+            --muted-foreground: #71717a;
+            --border: #e4e4e7;
+            --input: #e4e4e7;
+            --primary: #18181b;
+            --primary-foreground: #fafafa;
+            --secondary: #f4f4f5;
+            --secondary-foreground: #18181b;
+            --accent: #f4f4f5;
+            --accent-foreground: #18181b;
+            --destructive: #ef4444;
+            --destructive-foreground: #ffffff;
+            --ring: #18181b;
+            --radius: 0.625rem;
+            --hover-bg: rgba(0, 0, 0, 0.04);
+            --active-bg: rgba(0, 0, 0, 0.08);
+            --code-bg: #f6f8fa;
+        }
 
-      .code-container {
-        position: relative;
-      }
+        [data-theme="dark"] {
+            --background: #09090b;
+            --foreground: #fafafa;
+            --card: #18181b;
+            --card-foreground: #fafafa;
+            --muted: #27272a;
+            --muted-foreground: #a1a1aa;
+            --border: #27272a;
+            --input: #27272a;
+            --primary: #fafafa;
+            --primary-foreground: #18181b;
+            --secondary: #27272a;
+            --secondary-foreground: #fafafa;
+            --accent: #27272a;
+            --accent-foreground: #fafafa;
+            --destructive: #ef4444;
+            --destructive-foreground: #ffffff;
+            --ring: #fafafa;
+            --hover-bg: rgba(255, 255, 255, 0.05);
+            --active-bg: rgba(255, 255, 255, 0.1);
+            --code-bg: #1e1e2e;
+        }
 
-      .code-container .copy-button {
-        position: absolute;
-        top: 0;
-        right: 0;
-        padding: 5px;
-        border: none;
-        cursor: pointer;
-      }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme]) {
+                --background: #09090b;
+                --foreground: #fafafa;
+                --card: #18181b;
+                --card-foreground: #fafafa;
+                --muted: #27272a;
+                --muted-foreground: #a1a1aa;
+                --border: #27272a;
+                --input: #27272a;
+                --primary: #fafafa;
+                --primary-foreground: #18181b;
+                --secondary: #27272a;
+                --secondary-foreground: #fafafa;
+                --accent: #27272a;
+                --accent-foreground: #fafafa;
+                --destructive: #ef4444;
+                --destructive-foreground: #ffffff;
+                --ring: #fafafa;
+                --hover-bg: rgba(255, 255, 255, 0.05);
+                --active-bg: rgba(255, 255, 255, 0.1);
+                --code-bg: #1e1e2e;
+            }
+        }
+
+        /* ========== Base Styles ========== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        code, pre {
+            font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+        }
+
+        /* ========== Layout ========== */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .container {
+                padding: 0 1.5rem;
+            }
+        }
+
+        /* ========== Navigation ========== */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background-color: rgba(250, 250, 250, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .navbar {
+                background-color: rgba(9, 9, 11, 0.8);
+            }
+        }
+
+        [data-theme="dark"] .navbar {
+            background-color: rgba(9, 9, 11, 0.8);
+        }
+
+        [data-theme="light"] .navbar {
+            background-color: rgba(250, 250, 250, 0.8);
+        }
+
+        .navbar-inner {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--foreground);
+            text-decoration: none;
+        }
+
+        .navbar-brand svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .navbar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--muted-foreground);
+            border-radius: var(--radius);
+            transition: all 0.2s ease;
+        }
+
+        .navbar-nav a:hover {
+            color: var(--foreground);
+            background-color: var(--hover-bg);
+            opacity: 1;
+        }
+
+        /* ========== Typography ========== */
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            line-height: 1.4;
+        }
+
+        @media (min-width: 640px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        a:hover {
+            opacity: 0.7;
+        }
+
+        /* ========== Cards ========== */
+        .card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            transition: all 0.2s ease;
+        }
+
+        @media (min-width: 640px) {
+            .card {
+                padding: 1.5rem;
+            }
+        }
+
+        /* ========== Paste Header ========== */
+        .paste-header {
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .paste-title {
+            word-break: break-word;
+            margin-bottom: 0.5rem;
+        }
+
+        .paste-subtitle {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+            flex-wrap: wrap;
+        }
+
+        .paste-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8125rem;
+            padding: 0.125rem 0.5rem;
+            background-color: var(--muted);
+            border-radius: calc(var(--radius) - 2px);
+        }
+
+        .paste-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .paste-header {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 1rem;
+            }
+
+            .paste-title-section {
+                flex: 1;
+            }
+
+            .paste-actions {
+                margin-top: 0;
+            }
+        }
+
+        /* ========== Buttons ========== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: var(--secondary);
+            color: var(--secondary-foreground);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .btn-destructive {
+            background-color: var(--destructive);
+            color: var(--destructive-foreground);
+        }
+
+        .btn-ghost {
+            background-color: transparent;
+            color: var(--muted-foreground);
+            border-color: transparent;
+        }
+
+        .btn-ghost:hover {
+            background-color: var(--hover-bg);
+            color: var(--foreground);
+            opacity: 1;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+
+        /* ========== Content ========== */
+        .content-wrapper {
+            margin-top: 1rem;
+        }
+
+        /* Text Content */
+        .code-block {
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.625rem 0.875rem;
+            background-color: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--muted-foreground);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        pre {
+            margin: 0;
+            padding: 1rem;
+            background-color: var(--code-bg);
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        @media (min-width: 640px) {
+            pre {
+                padding: 1.25rem;
+            }
+        }
+
+        pre code {
+            font-size: 0.8125rem;
+            background: none;
+            padding: 0;
+        }
+
+        @media (min-width: 640px) {
+            pre code {
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Image Content */
+        .image-container {
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background-color: var(--code-bg);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ========== Meta Footer ========== */
+        .meta-footer {
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            font-size: 0.8125rem;
+            color: var(--muted-foreground);
+            flex-wrap: wrap;
+        }
+
+        .meta-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .meta-left svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* ========== Theme Toggle ========== */
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            border: none;
+            background: transparent;
+            color: var(--muted-foreground);
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--hover-bg);
+            color: var(--foreground);
+        }
+
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .theme-toggle .sun-icon {
+            display: none;
+        }
+
+        .theme-toggle .moon-icon {
+            display: block;
+        }
+
+        [data-theme="dark"] .theme-toggle .sun-icon {
+            display: block;
+        }
+
+        [data-theme="dark"] .theme-toggle .moon-icon {
+            display: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme]) .theme-toggle .sun-icon {
+                display: block;
+            }
+            :root:not([data-theme]) .theme-toggle .moon-icon {
+                display: none;
+            }
+        }
+
+        :root[data-theme="light"] .theme-toggle .sun-icon {
+            display: none;
+        }
+
+        :root[data-theme="light"] .theme-toggle .moon-icon {
+            display: block;
+        }
+
+        /* ========== Toast Notification ========== */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--foreground);
+            color: var(--background);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ========== Animations ========== */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 639px) {
+            .navbar-inner {
+                padding: 0 0.75rem;
+            }
+
+            .container {
+                padding: 0 0.75rem;
+            }
+
+            .card {
+                padding: 1rem;
+                margin: 0 -0.25rem;
+                border-radius: calc(var(--radius) - 2px);
+            }
+
+            .paste-actions {
+                width: 100%;
+            }
+
+            .paste-actions .btn {
+                flex: 1;
+            }
+
+            pre {
+                font-size: 0.75rem;
+            }
+        }
     </style>
-    <script>
-      async function copyCode(block, button) {
-        let code = block.querySelector("code");
-        let text = code.innerText;
 
-        await navigator.clipboard.writeText(text);
-
-        // visual feedback that task is completed
-        button.innerText = "Code Copied";
-
-        setTimeout(() => {
-          button.innerText = copyButtonLabel;
-        }, 700);
-      }
-    </script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
-      media="(prefers-color-scheme: dark)"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/mono-blue.min.css"
-      media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-    />
+    <!-- Syntax Highlighting -->
+    <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+    <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>
-      hljs.highlightAll();
-    </script>
-  </head>
+        hljs.highlightAll();
 
-  <body>
-    <a href="/">Home</a>
-    <div class="code-container">
-      <h2>{{.UID}}</h2>
-      <button class="copy-button" onclick="copyCode(this.parentElement, this)">
-        Copy
-      </button>
-      <pre><code>{{.Content}}</code></pre>
-      <p>{{.CreatedAt}}</p>
-      <form method="POST">
-        <input type="submit" value="Delete" />
-      </form>
+        // Theme management
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+        })();
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Copy functionality
+        async function copyContent() {
+            let content;
+            {{if eq .Type "image"}}
+            content = document.querySelector('.image-container img').src;
+            {{else}}
+            content = document.querySelector('pre code').innerText;
+            {{end}}
+            
+            await navigator.clipboard.writeText(content);
+            
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // Image download
+        function downloadImage() {
+            const img = document.querySelector('.image-container img');
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = '{{.Title}}' || 'image';
+            link.click();
+        }
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                Pasty
+            </a>
+            <div class="navbar-nav">
+                <a href="/">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Home
+                </a>
+                <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card animate-fade-in">
+            <!-- Header -->
+            <div class="paste-header">
+                <div class="paste-title-section">
+                    <h1 class="paste-title">{{.Title}}</h1>
+                    <div class="paste-subtitle">
+                        <span class="paste-id">{{.UID}}</span>
+                        <span>•</span>
+                        <span>{{.CreatedAt.Format "Jan 02, 2006 15:04"}}</span>
+                    </div>
+                </div>
+                <div class="paste-actions">
+                    {{if eq .Type "image"}}
+                    <button class="btn btn-ghost btn-sm" onclick="downloadImage()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download
+                    </button>
+                    {{end}}
+                    <button class="btn btn-ghost btn-sm" onclick="copyContent()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy
+                    </button>
+                    <form method="POST" style="display: inline;" onsubmit="return confirm('Delete this paste?')">
+                        <button type="submit" class="btn btn-destructive btn-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="content-wrapper">
+                {{if eq .Type "image"}}
+                <div class="image-container">
+                    <img src="{{.Content}}" alt="{{.Title}}">
+                </div>
+                {{else}}
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-label">Content</span>
+                    </div>
+                    <pre><code>{{.Content}}</code></pre>
+                </div>
+                {{end}}
+            </div>
+
+            <!-- Footer -->
+            <div class="meta-footer">
+                <div class="meta-left">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>{{.CreatedAt.Format "Created Jan 02, 2006 15:04:05"}}</span>
+                </div>
+            </div>
+        </div>
     </div>
-  </body>
+
+    <div class="toast" id="toast">{{if eq .Type "image"}}Image URL copied!{{else}}Copied to clipboard!{{end}}</div>
+</body>
 </html>

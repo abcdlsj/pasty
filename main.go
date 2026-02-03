@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"text/template"
 	"time"
 
@@ -27,7 +28,9 @@ import (
 type Paste struct {
 	ID        int       `gorm:"column:id"`
 	UID       string    `gorm:"column:uid"`
+	Title     string    `gorm:"column:title"`
 	Content   string    `gorm:"column:content"`
+	Type      string    `gorm:"column:type"` // text, image
 	CreatedAt time.Time `gorm:"column:created_at"`
 }
 
@@ -53,7 +56,8 @@ var (
 
 	CFTurnstileURL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 
-	port               = os.Getenv("PORT")
+	port               = getEnvDefault("PORT", "8080")
+	isDevMode          = os.Getenv("LOCAL") == "true"
 	CFTurnstileSecret  = os.Getenv("CF_SECRET")
 	CFTurnstileSiteKey = os.Getenv("CF_SITEKEY")
 	GHClientID         = os.Getenv("GH_CLIENT_ID")
@@ -101,8 +105,14 @@ func getPasteWithID(db *gorm.DB, uid string) Paste {
 	return paste
 }
 
-func insertPaste(db *gorm.DB, content string) string {
-	paste := Paste{UID: uuid.New().String(), Content: content, CreatedAt: time.Now()}
+func insertPaste(db *gorm.DB, title, content, pasteType string) string {
+	paste := Paste{
+		UID:       uuid.New().String(),
+		Title:     title,
+		Content:   content,
+		Type:      pasteType,
+		CreatedAt: time.Now(),
+	}
 	db.Create(&paste)
 	return paste.UID
 }
@@ -296,15 +306,27 @@ func getGithubData(accessToken string) string {
 	return ghresp.Login
 }
 
+func getEnvDefault(key, defaultVal string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return defaultVal
+}
+
 func main() {
 	randCipherKey()
 
 	flag.StringVar(&dbFile, "db", dbFile, "database file")
+	flag.Parse()
+
+	if isDevMode {
+		log.Println("Running in LOCAL mode - authentication disabled")
+	}
 
 	db := initDB(dbFile)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if !checkRefreshGHStatus(w, r) {
+		if !isDevMode && !checkRefreshGHStatus(w, r) {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
@@ -314,17 +336,70 @@ func main() {
 			tmpl.ExecuteTemplate(w, "index.html", map[string]interface{}{
 				"Pastes":             pastes,
 				"CFTurnstileSiteKey": CFTurnstileSiteKey,
+				"IsDevMode":          isDevMode,
 			})
 		} else {
-			r.ParseForm()
-			if !cfValidate(r) {
-				fmt.Fprintf(w, "Turnstile validation failed, IP: <%s>", r.Header.Get("CF-Connecting-IP"))
-				return
+			// Check for multipart form (file upload) or regular form
+			contentType := r.Header.Get("Content-Type")
+			var title, content, pasteType string
+
+			if strings.Contains(contentType, "multipart/form-data") {
+				// Parse multipart form (32MB max memory)
+				r.ParseMultipartForm(32 << 20)
+				
+				if !isDevMode && !cfValidate(r) {
+					fmt.Fprintf(w, "Turnstile validation failed, IP: <%s>", r.Header.Get("CF-Connecting-IP"))
+					return
+				}
+
+				title = r.FormValue("title")
+
+				// Check for file upload
+				file, header, err := r.FormFile("image")
+				if err == nil && file != nil {
+					defer file.Close()
+					
+					// Validate image type
+					contentType = header.Header.Get("Content-Type")
+					if !strings.HasPrefix(contentType, "image/") {
+						fmt.Fprintf(w, "Invalid file type: only images are allowed")
+						return
+					}
+
+					// Read and encode image to base64
+					data, err := io.ReadAll(file)
+					if err != nil {
+						fmt.Fprintf(w, "Error reading file: %v", err)
+						return
+					}
+
+					pasteType = "image"
+					content = fmt.Sprintf("data:%s;base64,%s", contentType, base64.StdEncoding.EncodeToString(data))
+				} else {
+					// Text paste
+					pasteType = "text"
+					content = escapeContent(r.FormValue("content"))
+				}
+			} else {
+				// Regular form
+				r.ParseForm()
+				
+				if !isDevMode && !cfValidate(r) {
+					fmt.Fprintf(w, "Turnstile validation failed, IP: <%s>", r.Header.Get("CF-Connecting-IP"))
+					return
+				}
+
+				title = r.FormValue("title")
+				pasteType = "text"
+				content = escapeContent(r.FormValue("content"))
 			}
 
-			content := r.Form.Get("content")
+			// Use UID as title if not provided
+			if strings.TrimSpace(title) == "" {
+				title = ""
+			}
 
-			uid := insertPaste(db, escapeContent(content))
+			uid := insertPaste(db, title, content, pasteType)
 			http.Redirect(w, r, "/paste/"+uid, http.StatusSeeOther)
 		}
 	})
@@ -332,13 +407,30 @@ func main() {
 	http.HandleFunc("/paste/", func(w http.ResponseWriter, r *http.Request) {
 		uid := r.URL.Path[len("/paste/"):]
 
+		// Skip favicon.ico requests
+		if uid == "favicon.ico" {
+			http.NotFound(w, r)
+			return
+		}
+
 		if r.Method == "GET" {
 			paste := getPasteWithID(db, uid)
 			if paste.isNil() {
 				http.NotFound(w, r)
 				return
 			}
-			tmpl.ExecuteTemplate(w, "paste.html", paste)
+			title := paste.Title
+			if title == "" {
+				title = paste.UID
+			}
+			tmpl.ExecuteTemplate(w, "paste.html", map[string]interface{}{
+				"UID":       paste.UID,
+				"Title":     title,
+				"Content":   paste.Content,
+				"Type":      paste.Type,
+				"CreatedAt": paste.CreatedAt,
+				"IsDevMode": isDevMode,
+			})
 		} else {
 			deletePaste(db, uid)
 			http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -351,10 +443,18 @@ func main() {
 	})
 
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		if isDevMode {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
 		http.Redirect(w, r, GHRedirectURL, http.StatusSeeOther)
 	})
 
 	http.HandleFunc("/login/callback", func(w http.ResponseWriter, r *http.Request) {
+		if isDevMode {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
 		code := r.URL.Query().Get("code")
 		ak, sk, expiresIn := getGithubAccessToken(code, "")
 		if ak == "" {

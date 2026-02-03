@@ -1,57 +1,978 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Pasty</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css"
-    />
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pasty - Simple Pastebin</title>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-      body {
-        font-family: "gg sans Normal", ui-sans-serif, system-ui, -apple-system;
-      }
+        /* ========== CSS Variables - Light/Dark Theme ========== */
+        :root {
+            --background: #fafafa;
+            --foreground: #18181b;
+            --card: #ffffff;
+            --card-foreground: #18181b;
+            --muted: #f4f4f5;
+            --muted-foreground: #71717a;
+            --border: #e4e4e7;
+            --input: #e4e4e7;
+            --primary: #18181b;
+            --primary-foreground: #fafafa;
+            --secondary: #f4f4f5;
+            --secondary-foreground: #18181b;
+            --accent: #f4f4f5;
+            --accent-foreground: #18181b;
+            --destructive: #ef4444;
+            --destructive-foreground: #ffffff;
+            --ring: #18181b;
+            --radius: 0.625rem;
+            --hover-bg: rgba(0, 0, 0, 0.04);
+            --active-bg: rgba(0, 0, 0, 0.08);
+            --code-bg: #f6f8fa;
+        }
+
+        [data-theme="dark"] {
+            --background: #09090b;
+            --foreground: #fafafa;
+            --card: #18181b;
+            --card-foreground: #fafafa;
+            --muted: #27272a;
+            --muted-foreground: #a1a1aa;
+            --border: #27272a;
+            --input: #27272a;
+            --primary: #fafafa;
+            --primary-foreground: #18181b;
+            --secondary: #27272a;
+            --secondary-foreground: #fafafa;
+            --accent: #27272a;
+            --accent-foreground: #fafafa;
+            --destructive: #ef4444;
+            --destructive-foreground: #ffffff;
+            --ring: #fafafa;
+            --hover-bg: rgba(255, 255, 255, 0.05);
+            --active-bg: rgba(255, 255, 255, 0.1);
+            --code-bg: #1e1e2e;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme]) {
+                --background: #09090b;
+                --foreground: #fafafa;
+                --card: #18181b;
+                --card-foreground: #fafafa;
+                --muted: #27272a;
+                --muted-foreground: #a1a1aa;
+                --border: #27272a;
+                --input: #27272a;
+                --primary: #fafafa;
+                --primary-foreground: #18181b;
+                --secondary: #27272a;
+                --secondary-foreground: #fafafa;
+                --accent: #27272a;
+                --accent-foreground: #fafafa;
+                --destructive: #ef4444;
+                --destructive-foreground: #ffffff;
+                --ring: #fafafa;
+                --hover-bg: rgba(255, 255, 255, 0.05);
+                --active-bg: rgba(255, 255, 255, 0.1);
+                --code-bg: #1e1e2e;
+            }
+        }
+
+        /* ========== Base Styles ========== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        code, pre {
+            font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+        }
+
+        /* ========== Layout ========== */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .container {
+                padding: 0 1.5rem;
+            }
+        }
+
+        /* ========== Navigation ========== */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background-color: rgba(250, 250, 250, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .navbar {
+                background-color: rgba(9, 9, 11, 0.8);
+            }
+        }
+
+        [data-theme="dark"] .navbar {
+            background-color: rgba(9, 9, 11, 0.8);
+        }
+
+        [data-theme="light"] .navbar {
+            background-color: rgba(250, 250, 250, 0.8);
+        }
+
+        .navbar-inner {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--foreground);
+            text-decoration: none;
+        }
+
+        .navbar-brand svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* ========== Typography ========== */
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        @media (min-width: 640px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.875rem;
+            letter-spacing: -0.02em;
+        }
+
+        @media (min-width: 640px) {
+            h2 {
+                font-size: 1.25rem;
+            }
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        a:hover {
+            opacity: 0.7;
+        }
+
+        /* ========== Cards ========== */
+        .card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            transition: all 0.2s ease;
+        }
+
+        @media (min-width: 640px) {
+            .card {
+                padding: 1.5rem;
+            }
+        }
+
+        .card:hover {
+            border-color: var(--muted-foreground);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--foreground);
+        }
+
+        /* ========== Buttons ========== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: var(--secondary-foreground);
+            border-color: var(--border);
+        }
+
+        .btn-ghost {
+            background-color: transparent;
+            color: var(--muted-foreground);
+            border-color: transparent;
+        }
+
+        .btn-ghost:hover {
+            background-color: var(--hover-bg);
+            color: var(--foreground);
+            opacity: 1;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.8125rem;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+        }
+
+        /* ========== Forms ========== */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--foreground);
+            margin-bottom: 0.375rem;
+        }
+
+        .form-label .optional {
+            font-weight: 400;
+            color: var(--muted-foreground);
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.9375rem;
+            font-family: 'Inter', sans-serif;
+            border: 1px solid var(--input);
+            border-radius: var(--radius);
+            background-color: var(--background);
+            color: var(--foreground);
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--ring);
+            box-shadow: 0 0 0 2px var(--ring);
+        }
+
+        input[type="text"]::placeholder,
+        textarea::placeholder {
+            color: var(--muted-foreground);
+        }
+
+        textarea {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            resize: vertical;
+            line-height: 1.6;
+            min-height: 100px;
+        }
+
+        /* ========== Tabs ========== */
+        .tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1px;
+        }
+
+        .tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 0.875rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--muted-foreground);
+            border-radius: var(--radius) var(--radius) 0 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            background: transparent;
+        }
+
+        .tab:hover {
+            color: var(--foreground);
+            background-color: var(--hover-bg);
+        }
+
+        .tab.active {
+            color: var(--foreground);
+            background-color: var(--background);
+            box-shadow: inset 0 -2px 0 0 var(--foreground);
+        }
+
+        .tab svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ========== File Upload ========== */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background-color: var(--background);
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--foreground);
+            background-color: var(--hover-bg);
+        }
+
+        .upload-area svg {
+            width: 40px;
+            height: 40px;
+            color: var(--muted-foreground);
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-text {
+            font-size: 0.9375rem;
+            color: var(--foreground);
+            margin-bottom: 0.25rem;
+        }
+
+        .upload-hint {
+            font-size: 0.8125rem;
+            color: var(--muted-foreground);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            max-height: 300px;
+            display: none;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-color: var(--code-bg);
+        }
+
+        .image-preview.show {
+            display: block;
+        }
+
+        /* ========== Paste List ========== */
+        .paste-list {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        @media (min-width: 640px) {
+            .paste-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .paste-item {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .paste-item:hover {
+            border-color: var(--muted-foreground);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .paste-item:hover {
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        [data-theme="dark"] .paste-item:hover {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .paste-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .paste-title {
+            font-weight: 600;
+            font-size: 0.9375rem;
+            color: var(--foreground);
+            word-break: break-word;
+            flex: 1;
+        }
+
+        .paste-type-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            color: var(--muted-foreground);
+            flex-shrink: 0;
+        }
+
+        .paste-type-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .paste-preview {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8125rem;
+            color: var(--muted-foreground);
+            background-color: var(--code-bg);
+            padding: 0.75rem;
+            border-radius: calc(var(--radius) - 2px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 80px;
+            line-height: 1.5;
+        }
+
+        .paste-preview code {
+            background: none;
+            padding: 0;
+        }
+
+        .paste-thumb {
+            width: 100%;
+            height: 120px;
+            border-radius: calc(var(--radius) - 2px);
+            overflow: hidden;
+            background-color: var(--code-bg);
+        }
+
+        .paste-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .paste-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--muted-foreground);
+        }
+
+        .paste-id {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ========== Empty State ========== */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--muted-foreground);
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* ========== Section Header ========== */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        @media (min-width: 640px) {
+            .section-title {
+                font-size: 1.25rem;
+            }
+        }
+
+        /* ========== Theme Toggle ========== */
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            border: none;
+            background: transparent;
+            color: var(--muted-foreground);
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--hover-bg);
+            color: var(--foreground);
+        }
+
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .theme-toggle .sun-icon {
+            display: none;
+        }
+
+        .theme-toggle .moon-icon {
+            display: block;
+        }
+
+        [data-theme="dark"] .theme-toggle .sun-icon {
+            display: block;
+        }
+
+        [data-theme="dark"] .theme-toggle .moon-icon {
+            display: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme]) .theme-toggle .sun-icon {
+                display: block;
+            }
+            :root:not([data-theme]) .theme-toggle .moon-icon {
+                display: none;
+            }
+        }
+
+        :root[data-theme="light"] .theme-toggle .sun-icon {
+            display: none;
+        }
+
+        :root[data-theme="light"] .theme-toggle .moon-icon {
+            display: block;
+        }
+
+        /* ========== Animations ========== */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 639px) {
+            .navbar-inner {
+                padding: 0 0.75rem;
+            }
+
+            .container {
+                padding: 0 0.75rem;
+            }
+
+            .card {
+                padding: 1rem;
+                margin: 0 -0.25rem;
+                border-radius: calc(var(--radius) - 2px);
+            }
+
+            .upload-area {
+                padding: 1.5rem 1rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+            }
+        }
+
+        /* ========== Utility ========== */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
     </style>
-    <script
-      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-      async
-      defer
-    ></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
-      media="(prefers-color-scheme: dark)"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/mono-blue.min.css"
-      media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-    />
+
+    <!-- Syntax Highlighting -->
+    <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+    <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>
-      hljs.highlightAll();
+        hljs.highlightAll();
+
+        // Theme management
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+        })();
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            tab.classList.add('active');
+            const contentId = tab.getAttribute('data-tab') + '-content';
+            document.getElementById(contentId).classList.add('active');
+        }
+
+        // File upload handling
+        function initFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            function handleFile(file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select an image file');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.add('show');
+                };
+                reader.readAsDataURL(file);
+
+                // Create a DataTransfer to set the file to the input
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initFileUpload);
     </script>
-  </head>
-  <body>
-    <h1>Pasty</h1>
-    <p>Input your paste</p>
-    <form method="POST">
-      <textarea name="content" required rows="30"></textarea>
-      <br />
-      <input type="submit" value="Submit" />
-      <div
-        class="cf-turnstile"
-        data-sitekey="{{.CFTurnstileSiteKey}}"
-        data-callback="turnstileCompleted"
-      ></div>
-    </form>
-    <hr />
-    <h2>Pasted</h2>
-    {{range .Pastes}}
-    <div>
-      <a href="/paste/{{.UID}}">{{.UID}}</a>
-      <pre><code>{{truncate .Content 200}}</code></pre>
-    </div>
+    {{if not .IsDevMode}}
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     {{end}}
-  </body>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                Pasty
+            </a>
+            <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Create Paste Section -->
+        <div class="card animate-fade-in">
+            <div class="section-header" style="margin-bottom: 1rem;">
+                <h1 style="margin: 0; font-size: 1.125rem;">New Paste</h1>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                <!-- Title Input -->
+                <div class="form-group">
+                    <label class="form-label">
+                        Title <span class="optional">(optional)</span>
+                    </label>
+                    <input type="text" name="title" placeholder="Enter a title or leave blank for auto-generated ID...">
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button type="button" class="tab active" data-tab="text" onclick="switchTab(this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        Text
+                    </button>
+                    <button type="button" class="tab" data-tab="image" onclick="switchTab(this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        Image
+                    </button>
+                </div>
+
+                <!-- Text Content -->
+                <div id="text-content" class="tab-content active">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <textarea name="content" rows="5" placeholder="Paste your text here..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Image Upload -->
+                <div id="image-content" class="tab-content">
+                    <div class="upload-area" id="uploadArea">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <div class="upload-text">Click or drag image here</div>
+                        <div class="upload-hint">Supports JPG, PNG, GIF, WebP</div>
+                    </div>
+                    <input type="file" id="fileInput" name="image" class="file-input" accept="image/*">
+                    <div class="image-preview" id="imagePreview">
+                        <img id="previewImg" alt="Preview">
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="form-actions" style="display: flex; align-items: center; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                    <button type="submit" class="btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        Create Paste
+                    </button>
+                    {{if not .IsDevMode}}
+                    <div class="cf-turnstile" data-sitekey="{{.CFTurnstileSiteKey}}"></div>
+                    {{end}}
+                </div>
+            </form>
+        </div>
+
+        <!-- Recent Pastes Section -->
+        <div style="margin-top: 2rem;">
+            <div class="section-header">
+                <h2 class="section-title">Recent Pastes</h2>
+            </div>
+
+            {{if .Pastes}}
+            <div class="paste-list">
+                {{range .Pastes}}
+                <a href="/paste/{{.UID}}" class="paste-item animate-fade-in">
+                    <div class="paste-header">
+                        <span class="paste-title">{{if .Title}}{{.Title}}{{else}}{{.UID}}{{end}}</span>
+                        <span class="paste-type-icon">
+                            {{if eq .Type "image"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            {{else}}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                            {{end}}
+                        </span>
+                    </div>
+                    {{if eq .Type "image"}}
+                    <div class="paste-thumb">
+                        <img src="{{.Content}}" alt="{{.Title}}" loading="lazy">
+                    </div>
+                    {{else}}
+                    <div class="paste-preview"><code>{{truncate .Content 120}}</code></div>
+                    {{end}}
+                    <div class="paste-meta">
+                        <span class="paste-id">{{.UID}}</span>
+                        <span>{{.CreatedAt.Format "Jan 02"}}</span>
+                    </div>
+                </a>
+                {{end}}
+            </div>
+            {{else}}
+            <div class="empty-state">
+                <svg class="empty-state-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <p>No pastes yet</p>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</body>
 </html>
