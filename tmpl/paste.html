@@ -678,15 +678,13 @@
                         </svg>
                         Copy
                     </button>
-                    <form method="POST" style="display: inline;" onsubmit="return confirm('Delete this paste?')">
-                        <button type="submit" class="btn btn-destructive btn-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                            Delete
-                        </button>
-                    </form>
+                    <button type="button" class="btn btn-destructive btn-sm" onclick="showDeleteConfirm()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        Delete
+                    </button>
                 </div>
             </div>
 
@@ -720,5 +718,44 @@
     </div>
 
     <div class="toast" id="toast">{{if eq .Type "image"}}Image URL copied!{{else}}Copied to clipboard!{{end}}</div>
+
+    <!-- Confirm Dialog -->
+    <div id="confirmDialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;">
+        <div style="background: var(--card); border-radius: var(--radius); padding: 1.5rem; width: 90%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div style="margin-bottom: 1rem;">
+                <h3 style="font-size: 1rem; font-weight: 600;">确认删除</h3>
+            </div>
+            <div style="margin-bottom: 1.5rem; color: var(--muted-foreground);">
+                <p>确定要删除这个 Paste 吗？此操作不可撤销。</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button class="btn" onclick="hideDialog('confirmDialog')">取消</button>
+                <button class="btn btn-destructive" onclick="executeDelete()">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Form (hidden) -->
+    <form id="deleteForm" method="POST" style="display: none;"></form>
+
+    <script>
+        // Dialog functions
+        function showDialog(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function hideDialog(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function showDeleteConfirm() {
+            showDialog('confirmDialog');
+        }
+
+        function executeDelete() {
+            hideDialog('confirmDialog');
+            document.getElementById('deleteForm').submit();
+        }
+    </script>
 </body>
 </html>
