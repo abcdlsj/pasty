@@ -9,7 +9,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
         /* ========== CSS Variables - Light/Dark Theme ========== */
@@ -161,8 +161,10 @@
         }
 
         .navbar-brand {
-            font-weight: 700;
-            font-size: 1.25rem;
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 1.375rem;
+            letter-spacing: -0.03em;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -435,14 +437,14 @@
             border-radius: var(--radius);
             overflow: hidden;
             border: 1px solid var(--border);
-            max-height: 300px;
+            max-height: 160px;
             display: none;
         }
 
         .image-preview img {
             width: 100%;
-            height: 100%;
-            object-fit: contain;
+            height: 160px;
+            object-fit: cover;
             background-color: var(--code-bg);
         }
 
@@ -496,8 +498,10 @@
         }
 
         .paste-title {
-            font-weight: 600;
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-weight: 500;
             font-size: 0.9375rem;
+            letter-spacing: -0.01em;
             color: var(--foreground);
             word-break: break-word;
             flex: 1;
@@ -597,8 +601,10 @@
         }
 
         .section-title {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
             font-size: 1.125rem;
-            font-weight: 600;
+            font-weight: 500;
+            letter-spacing: -0.02em;
             color: var(--foreground);
         }
 
