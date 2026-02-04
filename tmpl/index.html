@@ -825,9 +825,6 @@
 
         document.addEventListener('DOMContentLoaded', initFileUpload);
     </script>
-    {{if not .IsDevMode}}
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    {{end}}
 </head>
 <body>
     <nav class="navbar">
@@ -927,9 +924,6 @@
                         </svg>
                         Create Paste
                     </button>
-                    {{if not .IsDevMode}}
-                    <div class="cf-turnstile" data-sitekey="{{.CFTurnstileSiteKey}}"></div>
-                    {{end}}
                 </div>
             </form>
         </div>
