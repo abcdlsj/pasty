@@ -3,7 +3,6 @@
 # Author: abcdlsj
 
 FROM golang:alpine AS builder
-RUN apk add --no-cache build-base gcc musl-dev linux-headers
 WORKDIR /build
 COPY . .
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o pasty .

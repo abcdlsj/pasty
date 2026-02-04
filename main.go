@@ -19,9 +19,8 @@ import (
 	"text/template"
 	"time"
 
+	sqlite "github.com/glebarez/sqlite"
 	"github.com/google/uuid"
-	_ "github.com/mattn/go-sqlite3"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -346,7 +345,7 @@ func main() {
 			if strings.Contains(contentType, "multipart/form-data") {
 				// Parse multipart form (32MB max memory)
 				r.ParseMultipartForm(32 << 20)
-				
+
 				if !isDevMode && !cfValidate(r) {
 					fmt.Fprintf(w, "Turnstile validation failed, IP: <%s>", r.Header.Get("CF-Connecting-IP"))
 					return
@@ -358,7 +357,7 @@ func main() {
 				file, header, err := r.FormFile("image")
 				if err == nil && file != nil {
 					defer file.Close()
-					
+
 					// Validate image type
 					contentType = header.Header.Get("Content-Type")
 					if !strings.HasPrefix(contentType, "image/") {
@@ -383,7 +382,7 @@ func main() {
 			} else {
 				// Regular form
 				r.ParseForm()
-				
+
 				if !isDevMode && !cfValidate(r) {
 					fmt.Fprintf(w, "Turnstile validation failed, IP: <%s>", r.Header.Get("CF-Connecting-IP"))
 					return
