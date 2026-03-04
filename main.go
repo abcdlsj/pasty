@@ -167,9 +167,13 @@ func main() {
 				content = escapeContent(r.FormValue("content"))
 			}
 
-			// Use UID as title if not provided
 			if strings.TrimSpace(title) == "" {
 				title = ""
+			}
+
+			if strings.TrimSpace(content) == "" {
+				http.Error(w, "content is required", http.StatusBadRequest)
+				return
 			}
 
 			uid := insertPaste(db, title, content, pasteType)
