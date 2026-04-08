@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - Raw Link - Pasty</title>
+    <style>
+        :root {
+            --background: #f4efe7;
+            --foreground: #1f2937;
+            --card: rgba(255, 251, 245, 0.86);
+            --card-foreground: #1f2937;
+            --primary: #c8553d;
+            --primary-hover: #ad4631;
+            --secondary: #efe0d1;
+            --secondary-hover: #e7d3c0;
+            --muted: #f3e8dc;
+            --muted-foreground: #6b7280;
+            --border: rgba(31, 41, 55, 0.1);
+            --success: #2f6f52;
+            --success-soft: rgba(47, 111, 82, 0.12);
+            --destructive: #c2410c;
+            --destructive-hover: #9a3412;
+            --shadow-lg: 0 24px 60px rgba(88, 57, 39, 0.14);
+            --radius: 20px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #181411;
+                --foreground: #f7f4ef;
+                --card: rgba(35, 29, 25, 0.9);
+                --card-foreground: #f7f4ef;
+                --primary: #f08a5d;
+                --primary-hover: #ff9d73;
+                --secondary: #2c241f;
+                --secondary-hover: #3a302a;
+                --muted: #241d18;
+                --muted-foreground: #c2b4a7;
+                --border: rgba(247, 244, 239, 0.1);
+                --success: #72c095;
+                --success-soft: rgba(114, 192, 149, 0.12);
+                --destructive: #fb923c;
+                --destructive-hover: #fdba74;
+                --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.35);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+            color: var(--foreground);
+            background:
+                radial-gradient(circle at top left, rgba(200, 85, 61, 0.18), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(47, 111, 82, 0.16), transparent 24%),
+                linear-gradient(180deg, var(--background) 0%, color-mix(in srgb, var(--background) 88%, #ffffff 12%) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .shell {
+            width: 100%;
+            max-width: 760px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(18px);
+            overflow: hidden;
+        }
+
+        .hero {
+            padding: 32px 32px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: var(--success-soft);
+            color: var(--success);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 1rem 0 0.5rem;
+            font-size: clamp(2rem, 4vw, 3rem);
+            line-height: 1.05;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: var(--muted-foreground);
+            font-size: 1rem;
+            line-height: 1.65;
+        }
+
+        .body {
+            padding: 28px 32px 32px;
+        }
+
+        .panel {
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: color-mix(in srgb, var(--card) 74%, var(--secondary) 26%);
+        }
+
+        .panel-label {
+            margin: 0 0 0.75rem;
+            color: var(--muted-foreground);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .link-box {
+            display: block;
+            width: 100%;
+            padding: 0.95rem 1rem;
+            border: 1px dashed var(--border);
+            border-radius: 14px;
+            background: var(--background);
+            color: var(--foreground);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+
+        .meta {
+            margin-top: 0.85rem;
+            color: var(--muted-foreground);
+            font-size: 0.9rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .btn {
+            appearance: none;
+            border: 0;
+            border-radius: 999px;
+            padding: 0.9rem 1.2rem;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fffaf4;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--foreground);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-hover);
+        }
+
+        .btn-destructive {
+            background: transparent;
+            color: var(--destructive);
+            border: 1px solid color-mix(in srgb, var(--destructive) 24%, transparent);
+        }
+
+        .btn-destructive:hover {
+            background: color-mix(in srgb, var(--destructive) 10%, transparent);
+            color: var(--destructive-hover);
+        }
+
+        .notes {
+            margin-top: 22px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .note {
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: var(--muted);
+            color: var(--muted-foreground);
+            line-height: 1.6;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translate(-50%, 18px);
+            padding: 0.85rem 1.1rem;
+            border-radius: 999px;
+            background: var(--foreground);
+            color: var(--background);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        @media (max-width: 640px) {
+            .hero, .body {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+    <script>
+        function getRawURL() {
+            return window.location.origin + '/raw/{{.UID}}';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 1800);
+        }
+
+        async function copyRawURL() {
+            try {
+                await navigator.clipboard.writeText(getRawURL());
+                showToast('Raw URL copied');
+            } catch (err) {
+                showToast('Copy failed');
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="shell">
+        <div class="card">
+            <div class="hero">
+                <div class="eyebrow">Raw Only</div>
+                <h1>{{.Title}}</h1>
+                <p class="subtitle">This paste is stored as raw text only. It is hidden from the homepage and cannot be opened as an HTML preview.</p>
+            </div>
+
+            <div class="body">
+                <div class="panel">
+                    <p class="panel-label">Raw Endpoint</p>
+                    <code class="link-box">/raw/{{.UID}}</code>
+                    <div class="meta">Filename header: <code>{{.RawFileName}}</code></div>
+                    <div class="meta">Content-Disposition: <code>{{.ContentDisposition}}</code></div>
+                    <div class="meta">Created {{.CreatedAt.Format "Jan 02, 2006 15:04:05"}}</div>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="btn btn-primary" onclick="copyRawURL()">Copy Full Raw URL</button>
+                    <a class="btn btn-secondary" href="/raw/{{.UID}}" target="_blank" rel="noopener noreferrer">Open Raw Text</a>
+                    <form method="POST" action="/paste/{{.UID}}">
+                        <button type="submit" class="btn btn-destructive">Delete Paste</button>
+                    </form>
+                </div>
+
+                <div class="notes">
+                    <div class="note">Use the copied raw URL directly in clients that expect plain text responses, such as Clash subscription imports.</div>
+                    <div class="note">Keep the URL itself as the secret. Anyone with the raw link can fetch the content.</div>
+                    <div class="note">If the client honors <code>Content-Disposition</code>, it will see the configured filename header shown above.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Raw URL copied</div>
+</body>
+</html>
